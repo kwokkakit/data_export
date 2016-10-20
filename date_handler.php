@@ -78,17 +78,3 @@ function last_sunday($timestamp=0,$is_return_timestamp=true){
     }
     return $cache[$id];
 }
-
-// SQL
-function mp_sql($startDate, $endDate){
-    $sql = "SELECT rIncome.pub, rIncome.account, rIncome.BD, rIncome.category, rIncome.adFormat, rIncome.income, rCost.cost, (rCost.cost - rIncome.income) AS delta, IF(rCost.cost>0, ROUND(rIncome.income/rCost.cost,4), 0) AS rate, rData.impr, rData.click, rData.install, rIncome.media_type FROM (SELECT pub,mc.`account` AS account, mc.`agent` AS BD, pc.`cid` AS category, pin.`ad_format` AS adFormat, SUM(t.`income`) AS income, pin.`media_type` FROM publisher_bill_daily t JOIN publisher_info pin ON pin.`pubid`=t.`pubid` JOIN publisher pc ON pc.`pubid`=t.`pubid` JOIN member mc ON pc.`mid`=mc.`mid` WHERE 1=1 AND pin.`cooperation_mode`=1 AND pin.`promotion_method`=2 AND t.`datetime`>='$startDate' AND t.`datetime`<='$endDate' GROUP BY pub) rIncome JOIN (SELECT pub, SUM(t.`cost`) AS cost FROM advertiser_campaign_bill_detail t JOIN publisher_info pin ON pin.`pubid`=t.`pubid` JOIN publisher pc ON pc.`pubid`=t.`pubid` WHERE 1=1 AND pin.`cooperation_mode`=1 AND pin.`promotion_method`=2 AND t.`datetime`>='$startDate' AND t.`datetime`<='$endDate' GROUP BY pub) rCost ON rIncome.pub=rCost.pub JOIN (SELECT pub, SUM(t.`impr`) AS impr, SUM(click) AS click, SUM(INSTALL) AS INSTALL FROM count_campaign_daily t JOIN publisher_info pin ON pin.`pubid`=t.`pubid` JOIN publisher pc ON pc.`pubid`=t.`pubid` WHERE 1=1 AND pin.`cooperation_mode`=1 AND pin.`promotion_method`=2 AND t.`date`>='$startDate' AND t.`date`<='$endDate' GROUP BY pub) rData ON rIncome.pub=rData.pub";
-
-    return $sql;
-}
-
-function mpd_sql($eachDate, $condition){
-  $condition = rtrim($condition,"','");
-    $sql = "SELECT rIncome.datetime, rIncome.pub, rIncome.income, rCost.cost, rData.impr, rData.click, rData.install FROM (SELECT t.`datetime`, pub,mc.`account` AS account, mc.`agent` AS BD, pc.`cid` AS category, pin.`ad_format` AS adFormat, SUM(t.`income`) AS income, pin.`media_type` FROM publisher_bill_daily t JOIN publisher_info pin ON pin.`pubid`=t.`pubid` JOIN publisher pc ON pc.`pubid`=t.`pubid` JOIN member mc ON pc.`mid`=mc.`mid` WHERE 1=1 AND pin.`cooperation_mode`=1 AND pin.`promotion_method`=2 AND t.`datetime`>='$eachDate' AND t.`datetime`<='$eachDate' GROUP BY pub) rIncome JOIN (SELECT pub, SUM(t.`cost`) AS cost FROM advertiser_campaign_bill_detail t JOIN publisher_info pin ON pin.`pubid`=t.`pubid` JOIN publisher pc ON pc.`pubid`=t.`pubid` WHERE 1=1 AND pin.`cooperation_mode`=1 AND pin.`promotion_method`=2 AND t.`datetime`>='$eachDate' AND t.`datetime`<='$eachDate' GROUP BY pub) rCost ON rIncome.pub=rCost.pub JOIN (SELECT pub, SUM(t.`impr`) AS impr, SUM(click) AS click, SUM(INSTALL) AS INSTALL FROM count_campaign_daily t JOIN publisher_info pin ON pin.`pubid`=t.`pubid` JOIN publisher pc ON pc.`pubid`=t.`pubid` WHERE 1=1 AND pin.`cooperation_mode`=1 AND pin.`promotion_method`=2 AND t.`date`>='$eachDate' AND t.`date`<='$eachDate' GROUP BY pub) rData ON rIncome.pub=rData.pub WHERE rIncome.pub IN ('" . $condition . "')";
-
-    return $sql;
-}
